@@ -34,7 +34,7 @@ class teleop(object):
         try:
             self.cart_ser = serial.Serial(cart_port, 9600, write_timeout=0)
         except Exception as e:
-            print("ERROR. . .\n\tcould not connect to arduino: " + str(e))
+            print("ERROR. . .could not connect to arduino: " + str(e))
             exit(0)
 
         # start curses wrapper to get input
@@ -91,7 +91,7 @@ class teleop(object):
         data = bytearray(b'\x00' * 5)
         bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, throttle, brake, steering)
         self.cart_ser.write(data) 
-        
+
         stdscr.addstr(7,0,str(throttle) + "       ")
         stdscr.addstr(8,0,str(brake) + "      ")
         stdscr.addstr(9,0,str(steering) + "       ")
