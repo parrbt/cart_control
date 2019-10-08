@@ -35,7 +35,7 @@ class teleop(object):
             self.cart_ser = serial.Serial(cart_port, 9600, write_timeout=0)
         except Exception as e:
             print("ERROR. . .could not connect to arduino: " + str(e))
-            exit(0)
+            #exit(0)
 
         # start curses wrapper to get input
 	    curses.wrapper(self.get_input)
@@ -82,7 +82,7 @@ class teleop(object):
         rate = 10.
         steps = delay * rate
         for brake in np.linspace(0, 255, steps, endpoint=True):
-            self.send_cmd(0, int(brake), 0, stdscr)
+            self.send_cmd(0, int(brake), 50, stdscr)
             time.sleep(1./rate)
             stdscr.getch()
     
@@ -90,11 +90,11 @@ class teleop(object):
     def send_cmd(self, throttle, brake, steering, stdscr):
         data = bytearray(b'\x00' * 5)
         bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, throttle, brake, steering)
-        self.cart_ser.write(data)
+        #self.cart_ser.write(data)
 
-        stdscr.addstr(7,0,'Throttle val:  ' + str(throttle))
-        stdscr.addstr(8,0,'Brake val:     ' + str(brake))
-        stdscr.addstr(9,0,'Steering val:  ' + str(steering))
+        stdscr.addstr(7,0,'Throttle val:  ' + str(throttle) + '     ')
+        stdscr.addstr(8,0,'Brake val:     ' + str(brake) + '     ')
+        stdscr.addstr(9,0,'Steering val:  ' + str(steering) + '     ')
         
 if __name__ == "__main__": 
     teleop()
