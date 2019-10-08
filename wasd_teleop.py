@@ -40,7 +40,6 @@ class teleop(object):
         # start curses wrapper to get input
 	    curses.wrapper(self.get_input)
 
-
     """ main wrapper for curses """
     def get_input(self, stdscr):
     	curses.use_default_colors()
@@ -50,6 +49,9 @@ class teleop(object):
         stdscr.nodelay(True)
         stdscr.addstr(0,0,'Move with WASD, Z for brake, X for hard stop and Y for centering the wheel.')
         stdscr.addstr(1,0,'CTRL-C to exit')
+        stdscr.addstr(7,0,'Throttle val:')
+        stdscr.addstr(8,0,'Brake val:')
+        stdscr.addstr(9,0,'Steering val:')
 
         # runs indefinitely, getting user input
         while True:
@@ -86,15 +88,13 @@ class teleop(object):
     
     """ sends a set of throttle, brake, and steering commands to the arduino """
     def send_cmd(self, throttle, brake, steering, stdscr):
-
-        # creates a byte array, packs the commands into it, and sends to the arduino
         data = bytearray(b'\x00' * 5)
         bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, throttle, brake, steering)
-        self.cart_ser.write(data) 
+        self.cart_ser.write(data)
 
-        stdscr.addstr(7,0,str(throttle) + "       ")
-        stdscr.addstr(8,0,str(brake) + "      ")
-        stdscr.addstr(9,0,str(steering) + "       ")
+        stdscr.addstr(7,0,'Throttle val:  ' + str(throttle))
+        stdscr.addstr(8,0,'Brake val:     ' + str(brake))
+        stdscr.addstr(9,0,'Steering val:  ' + str(steering))
         
 if __name__ == "__main__": 
     teleop()
