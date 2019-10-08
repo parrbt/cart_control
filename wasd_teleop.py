@@ -14,7 +14,6 @@ import bitstruct
 import numpy as np
 cart_port = '/dev/ttyACM0' #hardcoded depending on computer
 
-
 """ main program funcitonality """
 class teleop(object):
     
@@ -25,11 +24,11 @@ class teleop(object):
     
     def __init__(self):
 
-        self.prev_key = 1
-
         # initialize current velocity and steering angle variables
         self.cur_vel = 0        # (0 - 255)
         self.cur_angle = 50     # 50 is middle, (0 - 100)
+
+        self.prev_key = 1
 
         # try to set up serial port for sending commands to arduino
         try:
@@ -50,13 +49,12 @@ class teleop(object):
 
         stdscr.nodelay(True)
         stdscr.addstr(0,0,'Move with WASD, Z for brake, X for hard stop and Y for centering the wheel.')
-        stdscr.addstr(,0,'CTRL-C to exit')
+        stdscr.addstr(1,0,'CTRL-C to exit')
 
         # runs indefinitely, getting user input
         while True:
 
             keyval = stdscr.getch()
-
             if keyval == ord('w'):
                 self.cur_vel = min(self.MAX_SPEED, self.cur_vel + 10)
             elif keyval == ord('a'):
@@ -88,9 +86,12 @@ class teleop(object):
     
     """ sends a set of throttle, brake, and steering commands to the arduino """
     def send_cmd(self, throttle, brake, steering, stdscr):
+
+        # creates a byte array, packs the commands into it, and sends to the arduino
         data = bytearray(b'\x00' * 5)
         bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, throttle, brake, steering)
         self.cart_ser.write(data) 
+        
         stdscr.addstr(7,0,str(throttle) + "       ")
         stdscr.addstr(8,0,str(brake) + "      ")
         stdscr.addstr(9,0,str(steering) + "       ")
