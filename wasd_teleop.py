@@ -50,19 +50,19 @@ class teleop(object):
         stdscr.addstr(0,0,'Move with WASD, Z for brake, X for hard stop and Y for centering the wheel.')
         stdscr.addstr(1,0,'CTRL-C to exit')
         stdscr.addstr(7,0,'Throttle val:')
-        stdscr.addstr(9,0,'Brake val:')
-        stdscr.addstr(11,0,'Steering val:')
+        stdscr.addstr(8,0,'Brake val:')
+        stdscr.addstr(9,0,'Steering val:')
 
         # runs indefinitely, getting user input
         while True:
 
             keyval = stdscr.getch()
             if keyval == ord('w'):
-                self.cur_vel = min(self.MAX_SPEED, self.cur_vel + 10)
+                self.cur_vel = min(self.MAX_SPEED, self.cur_vel + 15)
             elif keyval == ord('a'):
                 self.cur_angle = max(self.MIN_ANGLE, self.cur_angle - 10)
             elif keyval == ord('s'):
-                self.cur_vel = max(0, self.cur_vel - 10)
+                self.cur_vel = max(0, self.cur_vel - 15)
             elif keyval == ord('d'):
                 self.cur_angle = min(self.MAX_ANGLE, self.cur_angle + 10)
             elif keyval == ord('y'):
@@ -92,9 +92,9 @@ class teleop(object):
         bitstruct.pack_into('u8u8u8', data, 0, throttle, brake, steering)
         self.cart_ser.write(data)
 
-        stdscr.addstr(8,0, str(throttle) + '  ')
-        stdscr.addstr(10,0, str(brake) + '  ')
-        stdscr.addstr(12,0, str(steering) + '  ')
-        
+        stdscr.addstr(7,0,'Throttle val: ' + str(throttle) + '  ')
+        stdscr.addstr(8,0,'Brake val:    ' + str(brake) + '  ')
+        stdscr.addstr(9,0,'Steering val: ' + str(steering) + '  ')
+
 if __name__ == "__main__": 
     teleop()
