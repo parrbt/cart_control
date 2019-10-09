@@ -18,11 +18,7 @@ Adafruit_MCP4725 rightSteer;  /* port 4b */
 
 int throttleRelay = 9;        /* pin 9  */
 int brakeRelay = 8;           /* pin 8  */
-int wiper = A3;               /* pin A3 */
-
-/* magic numbers */
-const int magicStart = 42;
-const int magicEnd = 21;
+int wiper = A6;               /* pin A3 */
 
 /* Main program setup */
 void setup() {
@@ -57,12 +53,14 @@ void setup() {
 
 /* Main program loop */
 void loop() {
-
   delay(5);
 
+  readCommands();
+}
+
+void readCommands() {
+  
   // values read in from serial
-  int firstByte = -1;
-  int secondByte = -1;
   int throttleVal = -1;
   int brakeVal = -1;
   int desired = -1;
@@ -70,11 +68,6 @@ void loop() {
   // potentiometer value read from analog on board
   int acheived = -1;
 
-  // read in magic numbers
-  while (firstByte != magicStart || secondByte != magicEnd) {
-    firstByte = Serial.read();
-    secondByte = Serial.read();
-  }
 
   // Read in throttle, brake, and steering data
   throttleVal = Serial.read();
@@ -90,13 +83,14 @@ void loop() {
 
     // read in the potentiometer value and map from 0 (full left) to 100 (full right)
     acheived = analogRead(wiper);
-    acheived = map(acheived, 170, 390, 0, 100);
+    acheived = map(acheived, 100, 330, 0, 100);
 
     // send commands to handler functions
     setThrottle(throttleVal);
     setBrake(brakeVal);
     calculateSteering(desired, acheived);
   }
+  
 }
 
 /* sends a desired voltage to throttle dac */
@@ -134,7 +128,7 @@ void calculateSteering(int desired, int acheived) {
   int lowerBound = desired - 3;
   int upperBound = desired + 3;
 
-  while (acheived < lowerBound || acheived > upperBound) {
+  if (acheived < lowerBound || acheived > upperBound) {
 
     // determines where to steer given the desired and acheived turn angles
     if (acheived < lowerBound) {
@@ -158,7 +152,7 @@ void calculateSteering(int desired, int acheived) {
 
     // re-read wiper to see if we have reached the desired angle yet
     acheived = analogRead(wiper);
-    acheived = map(acheived, 170, 390, 0, 100);
+    acheived = map(acheived, 100, 330, 0, 100);
   }
 }
 

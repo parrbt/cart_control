@@ -19,8 +19,8 @@ class teleop(object):
     
     # define max speed and min / max steering angle for cart
     MAX_SPEED = 255
-    MAX_ANGLE = 0
-    MIN_ANGLE = 100
+    MIN_ANGLE = 0
+    MAX_ANGLE = 100
     
     def __init__(self):
 
@@ -35,7 +35,7 @@ class teleop(object):
             self.cart_ser = serial.Serial(cart_port, 9600, write_timeout=0)
         except Exception as e:
             print("ERROR. . .could not connect to arduino: " + str(e))
-            #exit(0)
+            exit(0)
 
         # start curses wrapper to get input
 	    curses.wrapper(self.get_input)
@@ -50,8 +50,8 @@ class teleop(object):
         stdscr.addstr(0,0,'Move with WASD, Z for brake, X for hard stop and Y for centering the wheel.')
         stdscr.addstr(1,0,'CTRL-C to exit')
         stdscr.addstr(7,0,'Throttle val:')
-        stdscr.addstr(8,0,'Brake val:')
-        stdscr.addstr(9,0,'Steering val:')
+        stdscr.addstr(9,0,'Brake val:')
+        stdscr.addstr(11,0,'Steering val:')
 
         # runs indefinitely, getting user input
         while True:
@@ -88,13 +88,13 @@ class teleop(object):
     
     """ sends a set of throttle, brake, and steering commands to the arduino """
     def send_cmd(self, throttle, brake, steering, stdscr):
-        data = bytearray(b'\x00' * 5)
-        bitstruct.pack_into('u8u8u8u8u8', data, 0, 42, 21, throttle, brake, steering)
-        #self.cart_ser.write(data)
+        data = bytearray(b'\x00' * 3)
+        bitstruct.pack_into('u8u8u8', data, 0, throttle, brake, steering)
+        self.cart_ser.write(data)
 
-        stdscr.addstr(7,0,'Throttle val:  ' + str(throttle) + '     ')
-        stdscr.addstr(8,0,'Brake val:     ' + str(brake) + '     ')
-        stdscr.addstr(9,0,'Steering val:  ' + str(steering) + '     ')
+        stdscr.addstr(8,0, str(throttle) + '  ')
+        stdscr.addstr(10,0, str(brake) + '  ')
+        stdscr.addstr(12,0, str(steering) + '  ')
         
 if __name__ == "__main__": 
     teleop()
