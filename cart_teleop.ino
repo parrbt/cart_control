@@ -59,7 +59,7 @@ void loop() {
 }
 
 void readCommands() {
-  
+
   // values read in from serial
   int throttleVal = -1;
   int brakeVal = -1;
@@ -74,10 +74,6 @@ void readCommands() {
   brakeVal = Serial.read();
   desired = Serial.read();
 
-  // Print out each value from data */
-  Serial.println(throttleVal);
-  Serial.println(brakeVal);
-  Serial.println(desired);
 
   if (throttleVal != -1 && brakeVal != -1 && desired != -1) {
 
@@ -89,8 +85,13 @@ void readCommands() {
     setThrottle(throttleVal);
     setBrake(brakeVal);
     calculateSteering(desired, acheived);
+
+    // Print out each value from data */
+    Serial.println(throttleVal);
+    Serial.println(brakeVal);
+    Serial.println(desired);
   }
-  
+
 }
 
 /* sends a desired voltage to throttle dac */

@@ -134,13 +134,13 @@ void calculateSteering(int desired, int acheived, int throttleVal) {
     if (throttleVal <= 15) {
       // determines where to steer given the desired and acheived turn angles
       if (acheived < lowerBound) {
-        Serial.print("Steering right:\t\t");
+        Serial.print("Steering right hard:\t\t");
         Serial.println(acheived);
         // right steering
         steer(2.0, 3.0);
 
       } else if (acheived > upperBound) {
-        Serial.print("Steering left:\t\t");
+        Serial.print("Steering left hard:\t\t");
         Serial.println(acheived);
         // left steering
         steer(3.0, 2.0);
@@ -156,13 +156,13 @@ void calculateSteering(int desired, int acheived, int throttleVal) {
     } else if (throttleVal <= 90) {
       // determines where to steer given the desired and acheived turn angles
       if (acheived < lowerBound) {
-        Serial.print("Steering right:\t\t");
+        Serial.print("Steering right less hard:\t\t");
         Serial.println(acheived);
         // right steering
         steer(2.25, 2.74);
 
       } else if (acheived > upperBound) {
-        Serial.print("Steering left:\t\t");
+        Serial.print("Steering left less hard:\t\t");
         Serial.println(acheived);
         // left steering
         steer(2.75, 2.25);
