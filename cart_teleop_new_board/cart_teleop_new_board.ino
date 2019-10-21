@@ -11,21 +11,17 @@
 
 #define TCAADDR 0x70
 
-Adafruit_MCP4725 throttle;    /* port 2a */
-Adafruit_MCP4725 brake;       /* port 2b */
-Adafruit_MCP4725 leftSteer;   /* port 4a */
-Adafruit_MCP4725 rightSteer;  /* port 4b */
+int throttle = 3;         /* pin 3 */
+int brake = 5;            /* pin 5 */
+int leftSteer = 6;        /* pin 6 */
+int throttleRelay = 7;    /* pin 7 */
+int brakeRelay = 8;       /* pin 8  */
+int rightSteer = 9;       /* pin 9 */
 
-int throttleRelay = 9;        /* pin 9  */
-int brakeRelay = 8;           /* pin 8  */
-int wiper = A6;               /* pin A3 */
+int wiper = A0;           /* pin A3 */
 
 /* Main program setup */
 void setup() {
-
-  // set up relays
-  pinMode(throttleRelay, OUTPUT);
-  pinMode(brakeRelay, OUTPUT);
 
   // set up serial
   Serial.begin(9600);
@@ -33,28 +29,34 @@ void setup() {
     delay(15);
   }
 
-  /* Sets up dacs connected to multiplexer  */
-  /*     a is 0x62, b is 0x63               */
-  /*     Port 2a: throttle                  */
-  /*     Port 2b: brake                     */
-  /*     Port 4a: left steer                */
-  /*     Port 4b: right steer               */
-  tcaselect(2);
-  throttle.begin(0x62);
-  brake.begin(0x63);
-  Serial.println("Throttle and brake dacs started!");
+  Serial.println("SETTING UP PINS");
 
-  tcaselect(4);
-  leftSteer.begin(0x62);
-  rightSteer.begin(0x63);
-  Serial.println("left and right steering dacs started!");
+  // set up relays
+  pinMode(throttleRelay, OUTPUT);
+  pinMode(brakeRelay, OUTPUT);
+
+  // set up outputs
+  pinMode(throttle, OUTPUT);
+  pinMode(brake, OUTPUT);
+  pinMode(leftSteer, OUTPUT);
+  pinMode(rightSteer, OUTPUT);
+
+  // set up wiper
+  pinMode(wiper, INPUT);
+
+  delay(500);
+  Serial.println(".");
+  delay(500);
+  Serial.println(".");
+  delay(500);
+  Serial.println(".");
+  delay(500);
   Serial.println("STARTING");
 }
 
 /* Main program loop */
 void loop() {
   delay(5);
-
   readCommands();
 }
 
@@ -85,20 +87,14 @@ void readCommands() {
     setThrottle(throttleVal);
     setBrake(brakeVal);
     calculateSteering(desired, acheived);
-
-    // Print out each value from data */
-    Serial.println(throttleVal);
-    Serial.println(brakeVal);
-    Serial.println(desired);
   }
 
 }
 
 /* sends a desired voltage to throttle dac */
 void setThrottle(int throttleVal) {
-  tcaselect(2);
-  int val = map(throttleVal, 0, 255, 409, 3645);
-  throttle.setVoltage(val, false);
+  int val = map(throttleVal, 0, 255, 25, 226);
+  analogWrite(throttle, val);
 
   Serial.print("Throttle set:\t\t");
   Serial.println(throttleVal);
@@ -111,9 +107,8 @@ void setThrottle(int throttleVal) {
 
 /* sends a desired voltage to brake dac */
 void setBrake(int brakeVal) {
-  tcaselect(2);
-  int val = map(brakeVal, 0, 255, 409, 3767);
-  brake.setVoltage(val, false);
+  int val = map(brakeVal, 0, 255, 25, 234);
+  analogWrite(brake, val);
 
   Serial.println("Brake set:\t\t");
   Serial.println(brakeVal);
@@ -144,31 +139,28 @@ void calculateSteering(int desired, int acheived) {
       // left steering
       steer(3.0, 2.0);
 
-    } else {
-      Serial.print("Neutral steering:\t\t");
-      Serial.println(acheived);
-      // neutral steering
-      steer(2.5, 2.5);
     }
-
-    // re-read wiper to see if we have reached the desired angle yet
-    acheived = analogRead(wiper);
-    acheived = map(acheived, 100, 330, 0, 100);
+    
+  } else {
+    Serial.print("Neutral steering:\t\t");
+    Serial.println(acheived);
+    // neutral steering
+    steer(2.5, 2.5);
   }
 }
 
 
 /* sends a desired voltage to both left and right steering channels */
 void steer(float leftVal, float rightVal) {
-  tcaselect(4);
   // check if values are valid - must be between 2.0 & 3.0 inclusive and sum up to 5.0
   if ((leftVal >= 2.0 && leftVal <= 3.0) && (rightVal >= 2.0 && rightVal <= 3.0) && (leftVal + rightVal == 5.0)) {
-    int finalLeft = mapf(leftVal, 0, 5, 0, 4095);
-    int finalRight = mapf(rightVal, 0, 5, 0, 4095);
+    int finalLeft = mapf(leftVal, 0, 5, 0, 255);
+    int finalRight = mapf(rightVal, 0, 5, 0, 255);
 
     // 0 for ground (0V) 4095 for max voltage (5V)
-    leftSteer.setVoltage(finalLeft, false);
-    rightSteer.setVoltage(finalRight, false);
+    analogWrite(leftSteer, finalLeft + 30);
+    analogWrite(rightSteer, finalRight + 30);
+
   } else {
     Serial.println("INVALID VOLTAGE. . .");
     Serial.println("\tPlease select a voltage between 2.0 - 3.0 volts");
@@ -179,17 +171,4 @@ void steer(float leftVal, float rightVal) {
 /* map function for a float value */
 float mapf(float x, float inMin, float inMax, float outMin, float outMax) {
   return (x - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
-}
-
-/* Sets up a given port on a multiplexer */
-void tcaselect(uint8_t i) {
-  if (i > 7) {
-    Serial.println("INVALID tcaselect. . .");
-    Serial.println("\tPlease select a value between 0 and 7");
-    return;
-  }
-
-  Wire.beginTransmission(TCAADDR);
-  Wire.write(1 << i);
-  Wire.endTransmission();
 }
