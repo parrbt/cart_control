@@ -1,18 +1,22 @@
 /*
-   cart_teleop_new_board.ino - Contains the main arduino code for controlling our autonomous golf cart with non-dac board.
+   cart_teleop_hybrid.ino - Contains the main arduino code for controlling our autonomous golf cart; hybrid version of new_board and original teleop.
 
       Author: Brandon Parr
       Version: 1.0
 */
 
-int throttle = 3;         /* pin 3 */
-int brake = 5;            /* pin 5 */
-int leftSteer = 6;        /* pin 6 */
-int throttleRelay = 7;    /* pin 7 */
-int brakeRelay = 8;       /* pin 8 */
-int rightSteer = 9;       /* pin 9 */
+#include <Adafruit_MCP4725.h>
+#include <Wire.h>
 
-int wiper = A0;           /* pin A0 */
+int throttle = 3;             /* pin 3 */
+int brake = 5;                /* pin 5 */
+int throttleRelay = 7;        /* pin 7 */
+int brakeRelay = 8;           /* pin 8 */
+
+int wiper = A0;               /* pin A0 */
+
+Adafruit_MCP4725 leftSteer;   /* 0x62  */
+Adafruit_MCP4725 rightSteer;  /* 0x63  */
 
 /* bounds for throttle mapping */
 int lowerThrottleBounds = 25;
@@ -24,7 +28,7 @@ int upperBrakeBounds = 234;
 
 /* bounds for brake mapping */
 int lowerSteerBounds = 0;
-int upperSteerBounds = 255;
+int upperSteerBounds = 4095;
 
 /* high, low, and neutral steer values */
 float lowSteer = 2.3;
@@ -47,13 +51,15 @@ void setup() {
   // set up relays
   pinMode(throttleRelay, OUTPUT);
   pinMode(brakeRelay, OUTPUT);
-
+  
   // set up outputs
   pinMode(throttle, OUTPUT);
   pinMode(brake, OUTPUT);
-  pinMode(leftSteer, OUTPUT);
-  pinMode(rightSteer, OUTPUT);
 
+  // set up left and right steer dacs
+  leftSteer.begin(0x62);
+  rightSteer.begin(0x63);
+  
   // set up wiper
   pinMode(wiper, INPUT);
   
@@ -91,6 +97,7 @@ void readCommands() {
   brakeVal = Serial.read();
   desired = Serial.read();
 
+
   if (throttleVal != -1 && brakeVal != -1 && desired != -1) {
 
     // read in the potentiometer value and map from 0 (full left) to 100 (full right)
@@ -102,9 +109,10 @@ void readCommands() {
     setBrake(brakeVal);
     calculateSteering(desired, acheived);
   }
+
 }
 
-/* sends a desired voltage to throttle dac */
+/* sends a desired voltage to throttle pin */
 void setThrottle(int throttleVal) {
   int val = map(throttleVal, 0, 255, lowerThrottleBounds, upperThrottleBounds);
   analogWrite(throttle, val);
@@ -118,7 +126,7 @@ void setThrottle(int throttleVal) {
   }
 }
 
-/* sends a desired voltage to brake dac */
+/* sends a desired voltage to brake pin */
 void setBrake(int brakeVal) {
   int val = map(brakeVal, 0, 255, lowerBrakeBounds, upperBrakeBounds);
   analogWrite(brake, val);
@@ -162,17 +170,16 @@ void calculateSteering(int desired, int acheived) {
 /* sends a desired voltage to both left and right steering channels */
 void steer(float leftVal, float rightVal) {
   // check if values are valid - must be between 2.0 & 3.0 inclusive and sum up to 5.0
-  if ((leftVal >= 2.0 && leftVal <= 3.0) && (rightVal >= 2.0 && rightVal <= 3.0) && (leftVal + rightVal == 5.0)) {
+  if ((leftVal >= lowSteer && leftVal <= highSteer) && (rightVal >= lowSteer && rightVal <= highSteer) && (leftVal + rightVal == 5.0)) {
     int finalLeft = mapf(leftVal, 0, 5, lowerSteerBounds, upperSteerBounds);
     int finalRight = mapf(rightVal, 0, 5, lowerSteerBounds, upperSteerBounds);
 
     // 0 for ground (0V) 4095 for max voltage (5V)
-    analogWrite(leftSteer, finalLeft);
-    analogWrite(rightSteer, finalRight);
-
+    leftSteer.setVoltage(finalLeft, false);
+    rightSteer.setVoltage(finalRight, false);
   } else {
     Serial.println("INVALID VOLTAGE. . .");
-    Serial.println("\tPlease select a voltage between 2.0 - 3.0 volts");
+    Serial.println("\tPlease select a voltage between 2.3 - 2.7 volts");
     Serial.println("\tLeft and right steering must sum to 5.0 volts");
   }
 }

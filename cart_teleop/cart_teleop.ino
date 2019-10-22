@@ -16,9 +16,9 @@ Adafruit_MCP4725 brake;       /* port 2b */
 Adafruit_MCP4725 leftSteer;   /* port 4a */
 Adafruit_MCP4725 rightSteer;  /* port 4b */
 
-int throttleRelay = 9;        /* pin 9  */
-int brakeRelay = 8;           /* pin 8  */
-int wiper = A6;               /* pin A3 */
+int throttleRelay = 9;        /* pin 9   */
+int brakeRelay = 8;           /* pin 8   */
+int wiper = A6;               /* pin A3  */
 
 /* bounds for throttle mapping */
 int lowerThrottleBounds = 409;
@@ -47,7 +47,6 @@ void setup() {
   // set up relays
   pinMode(throttleRelay, OUTPUT);
   pinMode(brakeRelay, OUTPUT);
-  pinMode(wiper, INPUT);
 
   // set up serial
   Serial.begin(9600);
@@ -76,7 +75,6 @@ void setup() {
 /* Main program loop */
 void loop() {
   delay(5);
-
   readCommands();
 }
 
@@ -105,23 +103,17 @@ void readCommands() {
   brakeVal = Serial.read();
   desired = Serial.read();
 
-
   if (throttleVal != -1 && brakeVal != -1 && desired != -1) {
 
     // read in the potentiometer value and map from 0 (full left) to 100 (full right)
     acheived = analogRead(wiper);
+    acheived = map(acheived, 100, 330, 0, 100);
 
     // send commands to handler functions
     setThrottle(throttleVal);
     setBrake(brakeVal);
     calculateSteering(desired, acheived);
-
-    // Print out each value from data */
-    Serial.println(throttleVal);
-    Serial.println(brakeVal);
-    Serial.println(desired);
   }
-
 }
 
 /* sends a desired voltage to throttle dac */
@@ -145,7 +137,7 @@ void setBrake(int brakeVal) {
   int val = map(brakeVal, 0, 255, lowerBrakeBounds, upperBrakeBounds);
   brake.setVoltage(val, false);
 
-  Serial.println("Brake set:\t\t");
+  Serial.print("Brake set:\t\t");
   Serial.println(brakeVal);
   if (brakeVal == 255) {
     digitalWrite(brakeRelay, LOW);
@@ -166,17 +158,11 @@ void calculateSteering(int desired, int acheived) {
       Serial.print("Steering right:\t\t");
       Serial.println(acheived);
       // right steering
-<<<<<<< HEAD:cart_teleop/cart_teleop.ino
       steer(lowSteer, highSteer);
-=======
-      steer(2.4, 2.6);
-
->>>>>>> 364151c1e18dd3dbbf603327690a636c4c460996:cart_teleop/cart_teleop.ino
     } else if (acheived > upperBound) {
       Serial.print("Steering left:\t\t");
       Serial.println(acheived);
       // left steering
-<<<<<<< HEAD:cart_teleop/cart_teleop.ino
       steer(highSteer, lowSteer);
     }
   } else {
@@ -184,19 +170,6 @@ void calculateSteering(int desired, int acheived) {
     Serial.println(acheived);
     // neutral steering
     steer(neutralSteer, neutralSteer);
-=======
-      steer(2.6, 2.4);
-
-    } else {
-      Serial.print("Neutral steering:\t\t");
-      Serial.println(acheived);
-      // neutral steering
-      steer(2.5, 2.5);
-    }
-
-    // re-read wiper to see if we have reached the desired angle yet
-    acheived = analogRead(wiper);
->>>>>>> 364151c1e18dd3dbbf603327690a636c4c460996:cart_teleop/cart_teleop.ino
   }
 }
 
