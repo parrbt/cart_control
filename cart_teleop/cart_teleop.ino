@@ -82,13 +82,22 @@ void loop() {
 void readCommands() {
 
   // values read in from serial
+  int firstByte = -1;
+  int secondByte = -1;
   int throttleVal = -1;
   int brakeVal = -1;
   int desired = -1;
-
+  
   // potentiometer value read from analog on board
   int acheived = -1;
 
+  // check to see if you have gotten the magic numbers.
+  while (firstByte != magicStart || secondByte != magicEnd) {
+    firstByte = Serial.read();
+    secondByte = Serial.read();
+    Serial.println(firstByte);
+    Serial.println(secondByte);
+  }
 
   // Read in throttle, brake, and steering data
   throttleVal = Serial.read();
