@@ -47,6 +47,7 @@ void setup() {
   // set up relays
   pinMode(throttleRelay, OUTPUT);
   pinMode(brakeRelay, OUTPUT);
+  pinMode(wiper, INPUT);
 
   // set up serial
   Serial.begin(9600);
@@ -109,7 +110,6 @@ void readCommands() {
 
     // read in the potentiometer value and map from 0 (full left) to 100 (full right)
     acheived = analogRead(wiper);
-    acheived = map(acheived, 100, 330, 0, 100);
 
     // send commands to handler functions
     setThrottle(throttleVal);
@@ -166,11 +166,17 @@ void calculateSteering(int desired, int acheived) {
       Serial.print("Steering right:\t\t");
       Serial.println(acheived);
       // right steering
+<<<<<<< HEAD:cart_teleop/cart_teleop.ino
       steer(lowSteer, highSteer);
+=======
+      steer(2.4, 2.6);
+
+>>>>>>> 364151c1e18dd3dbbf603327690a636c4c460996:cart_teleop/cart_teleop.ino
     } else if (acheived > upperBound) {
       Serial.print("Steering left:\t\t");
       Serial.println(acheived);
       // left steering
+<<<<<<< HEAD:cart_teleop/cart_teleop.ino
       steer(highSteer, lowSteer);
     }
   } else {
@@ -178,6 +184,19 @@ void calculateSteering(int desired, int acheived) {
     Serial.println(acheived);
     // neutral steering
     steer(neutralSteer, neutralSteer);
+=======
+      steer(2.6, 2.4);
+
+    } else {
+      Serial.print("Neutral steering:\t\t");
+      Serial.println(acheived);
+      // neutral steering
+      steer(2.5, 2.5);
+    }
+
+    // re-read wiper to see if we have reached the desired angle yet
+    acheived = analogRead(wiper);
+>>>>>>> 364151c1e18dd3dbbf603327690a636c4c460996:cart_teleop/cart_teleop.ino
   }
 }
 
